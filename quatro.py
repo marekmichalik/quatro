@@ -2,10 +2,10 @@ import os
 from random import randrange, choice
 from PIL import Image, ImageDraw
 
-FRAMES = 1000  # number of frames of viedo
+FRAMES = 6000  # number of frames of video
 SQUARES = 100  # squares count
-SIZE_X = 1920  # video dimensions in pixels
-SIZE_Y = 1080
+SIZE_X = 720  # video dimensions in pixels
+SIZE_Y = 480
 TEMP_FILE = 'quatro.gif'
 OUTPUT_FILE = 'quatro.webm'
 
@@ -185,17 +185,18 @@ class squares:
 
         return im
 
-    def generate_new_image(self):
+    def generate_new_frame(self):
         print('.', end='', flush=True)
         self.do_move()
-        return self.generate_image()
+        image = self.generate_image()
+        return image
 
     def generate_video(self):
         im = self.generate_image()
         # save as .gif
         im.save(TEMP_FILE,
                 save_all=True,
-                append_images=[self.generate_new_image() for _ in range(FRAMES-1)],
+                append_images=[self.generate_new_frame() for _ in range(FRAMES-1)],
                 duration=16.666,
                 loop=0,
                 minimize_size=True)
@@ -204,10 +205,10 @@ class squares:
         import moviepy.editor as mp
         clip = mp.VideoFileClip(TEMP_FILE)
         clip.write_videofile(OUTPUT_FILE, audio=False, threads=1, preset='fast',
-                             ffmpeg_params=['-vf', 'fps=60', '-ss', '5', '-crf', '30', '-b:v', '0'])
+                             ffmpeg_params=['-filter:v', 'setpts=0.5*PTS', '-crf', '30', '-b:v', '0'])
         clip.close()
 
-        os.remove(TEMP_FILE)
+        # os.remove(TEMP_FILE)
 
 
 def main():
