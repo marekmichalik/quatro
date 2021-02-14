@@ -44,6 +44,60 @@ class square:
 
         return True
 
+    def intersects_vertically(self, ax, ay, bx, by, sizex, sizey):  # dx should change
+
+        if ax < 0:
+            return True
+        if bx >= sizex:
+            return True
+
+        # they are "side by side" :)
+        if self.bx < ax:
+            return False
+        if bx < self.ax:
+            return False
+
+
+        # # it is entirely inside:
+        # if ax > self.ax and self.bx > bx and ay > self.ay and self.by > by:
+        #     return False
+        # # it is entirely inside:
+        # if ax < self.ax and self.bx < bx and ay < self.ay and self.by < by:
+        #     return False
+        if (ax == self.ax or ax == self.bx or bx == self.ax or bx == self.bx) and (self.ay <= ay <= self.by or self.ay <= by <= self.by or ay <= self.ay <= by or ay <= self.by <= by):
+            return True
+
+        return False
+
+    def intersects_horizontally(self, ax, ay, bx, by, sizex, sizey):  # dy should change
+
+        if ay < 0:
+            return True
+        if by >= sizey:
+            return True
+
+        # they are "side by side" :)
+        if self.by < ay:
+            return False
+        if by < self.ay:
+            return False
+
+        # # it is entirely inside:
+        # if ax > self.ax and self.bx > bx and ay > self.ay and self.by > by:
+        #     return False
+        # # it is entirely inside:
+        # if ax < self.ax and self.bx < bx and ay < self.ay and self.by < by:
+        #     return False
+        if (ay == self.ay or ay == self.by or by == self.ay or by == self.by ) and (self.ax <= ax <= self.bx or self.ax <= bx <= self.bx or ax <= self.ax <= bx or ax <= self.bx <= bx):
+            return True
+
+
+        return False
+
+
+
+
+
 
 class squares:
     def __init__(self, sizex, sizey):
@@ -63,6 +117,23 @@ class squares:
                return True
         return False
 
+    def intersecting_vertically(self, ax, ay, bx, by, not_this_one=None):
+
+        for sq in self.squares:
+            if sq == not_this_one:
+                continue
+            if sq.intersects_vertically(ax, ay, bx, by, self.sizex, self.sizey):
+               return True
+        return False
+
+    def intersecting_horizontally(self, ax, ay, bx, by, not_this_one=None):
+
+        for sq in self.squares:
+            if sq == not_this_one:
+                continue
+            if sq.intersects_horizontally(ax, ay, bx, by, self.sizex, self.sizey):
+               return True
+        return False
 
     def add_non_intersecting_square(self):
         ok = False
@@ -100,10 +171,20 @@ class squares:
     def do_move(self):
         for sq in self.squares:
             can_move = True
-            if self.intersecting(sq.ax+sq.dx, sq.ay+sq.dy, sq.bx+sq.dx, sq.by+sq.dy, not_this_one=sq):
+
+            # bounce
+
+            if self.intersecting_vertically(sq.ax+sq.dx, sq.ay+sq.dy, sq.bx+sq.dx, sq.by+sq.dy, not_this_one=sq):
                 sq.dx *= -1
+                can_move = False
+
+            # bounce
+            if self.intersecting_horizontally(sq.ax+sq.dx, sq.ay+sq.dy, sq.bx+sq.dx, sq.by+sq.dy, not_this_one=sq):
                 sq.dy *= -1
-            else:
+                can_move = False
+
+            # just move
+            if can_move:
                 sq.ax += sq.dx
                 sq.ay += sq.dy
                 sq.bx += sq.dx
@@ -123,15 +204,16 @@ class squares:
 
 
 def main():
-    sqs = squares(640, 480)
-    for _ in range(200):
+    sqs = squares(1920, 1080)
+    for _ in range(100):
         sqs.add_non_intersecting_square()
     print(sqs)
 
-    for i in range(4000):
+    for i in range(500):
         im = sqs.generate_image()
         im.save(f'squares{i:04}.png', 'PNG')
         sqs.do_move()
+        print(i)
 
 
 if __name__ == "__main__":
