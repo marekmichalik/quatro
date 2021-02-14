@@ -7,5 +7,3 @@ install python >3.5 form python.org
   
 pip install -r requirements.txt
 python quatro.py
-    
-
