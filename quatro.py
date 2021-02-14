@@ -14,10 +14,16 @@ class square:
     def __str__(self):
         return f'a[{self.ax}, {self.ay}], b[{self.bx}, {self.by}]: [{self.dx}, {self.dy}]'
 
-    def conflict(self, ax, ay, bx, by):
-        # it is entirely inside:
-        if ax < self.ax < self.bx < bx and ay < self.ay < self.by < by:
-            return False
+    def intersects(self, ax, ay, bx, by, sizex, sizey):
+
+        if ax < 0:
+            return True
+        if ay < 0:
+            return True
+        if bx >= sizex:
+            return True
+        if by >= sizey:
+            return True
 
         # they are "side by side" :)
         if self.bx < ax:
@@ -29,9 +35,16 @@ class square:
         if by < self.ay:
             return False
 
-
+        # it is entirely inside:
+        if ax > self.ax and self.bx > bx and ay > self.ay and self.by > by:
+            return False
+        # it is entirely inside:
+        if ax < self.ax and self.bx < bx and ay < self.ay and self.by < by:
+            return False
 
         return True
+
+
 class squares:
     def __init__(self, sizex, sizey):
         self.squares = []
@@ -41,12 +54,22 @@ class squares:
     def add_square(self, sq):
         self.squares += [sq]
 
-    def add_non_conflicting_square(self):
+    def intersecting(self, ax, ay, bx, by, not_this_one=None):
+
+        for sq in self.squares:
+            if sq == not_this_one:
+                continue
+            if sq.intersects(ax, ay, bx, by, self.sizex, self.sizey):
+               return True
+        return False
+
+
+    def add_non_intersecting_square(self):
         ok = False
         for _ in range(1000):
             ax = randrange(0, self.sizex)
             ay = randrange(0, self.sizey)
-            size = randrange(30, 200)
+            size = randrange(8, 300)
             bx = ax + size
             by = ay + size
             if bx >= self.sizex:
@@ -54,14 +77,8 @@ class squares:
             if by >= self.sizey:
                 continue
             # verify existing squares conflicts
-            conflict = False
-            for sq in self.squares:
-                if sq.conflict(ax, ay, bx, by):
-                    conflict = True
-                    break
-            if conflict:
+            if self.intersecting(ax, ay, bx, by):
                 continue
-
             ok = True
             break
 
@@ -81,7 +98,16 @@ class squares:
         return result
 
     def do_move(self):
-        pass
+        for sq in self.squares:
+            can_move = True
+            if self.intersecting(sq.ax+sq.dx, sq.ay+sq.dy, sq.bx+sq.dx, sq.by+sq.dy, not_this_one=sq):
+                sq.dx *= -1
+                sq.dy *= -1
+            else:
+                sq.ax += sq.dx
+                sq.ay += sq.dy
+                sq.bx += sq.dx
+                sq.by += sq.dy
 
     def generate_image(self):
         size = self.sizex, self.sizey
@@ -89,7 +115,7 @@ class squares:
         draw = ImageDraw.Draw(im)
         for sq in self.squares:
             draw.rectangle((sq.ax, sq.ay, sq.bx, sq.by), fill=None, width=1)
-            im.save('try.png', 'PNG')
+
         return im
 
     def generate_video(self):
@@ -98,13 +124,14 @@ class squares:
 
 def main():
     sqs = squares(640, 480)
-    for _ in range(20):
-        sqs.add_non_conflicting_square()
-
-    sqs.generate_image()
+    for _ in range(200):
+        sqs.add_non_intersecting_square()
     print(sqs)
 
-
+    for i in range(4000):
+        im = sqs.generate_image()
+        im.save(f'squares{i:04}.png', 'PNG')
+        sqs.do_move()
 
 
 if __name__ == "__main__":
