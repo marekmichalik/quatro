@@ -1,5 +1,5 @@
 # squares
-Generates simple bouncing squares animation demo
+Generates simple bouncing squares animation demo, saves it to webm file
 
 usage:
 
